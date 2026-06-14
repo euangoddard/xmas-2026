@@ -80,7 +80,6 @@ function addWindows(parent: THREE.Object3D, opts: WindowOpts): void {
 export function makeShop(
   width: number,
   signTexture: THREE.Texture,
-  msgIndex: number,
 ): THREE.Group {
   const g = new THREE.Group();
   const depth = width * 0.82;
@@ -144,7 +143,6 @@ export function makeShop(
   roof.position.y = groundH + 0.3 + upperH;
   g.add(roof);
 
-  void msgIndex;
   return g;
 }
 

@@ -44,7 +44,7 @@ All audio is **synthesised in-browser** with the Web Audio API — no asset file
 ### Customising the festive messages
 
 The shop signs cycle through the messages in
-[`src/scene/signTexture.js`](src/scene/signTexture.js) — edit the
+[`src/scene/signTexture.ts`](src/scene/signTexture.ts) — edit the
 `FESTIVE_MESSAGES` array to change them.
 
 ### Project layout

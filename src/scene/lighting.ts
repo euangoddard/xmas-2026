@@ -6,6 +6,7 @@ export interface Lighting {
   hemi: THREE.HemisphereLight;
   moon: THREE.DirectionalLight;
   glow: THREE.PointLight;
+  square: THREE.PointLight;
 }
 
 // A wintry night-time rig: cool moonlight key, warm bounce from the snow, and a
@@ -48,5 +49,5 @@ export function createLighting(scene: THREE.Scene): Lighting {
   square.position.set(3.4, 2.0, 4.8);
   scene.add(square);
 
-  return { hemi, moon, glow };
+  return { hemi, moon, glow, square };
 }

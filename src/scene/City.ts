@@ -160,7 +160,7 @@ export function createCity(scene: THREE.Scene): City {
       msg,
     );
     msg++;
-    const shop = makeShop(width, tex, i);
+    const shop = makeShop(width, tex);
     shop.position.set(x, 0, z);
     faceCentre(shop);
     city.add(shop);
