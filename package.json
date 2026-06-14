@@ -1,0 +1,24 @@
+{
+  "name": "oxford-snow-globe",
+  "version": "0.1.0",
+  "description": "An interactive Christmas card — a snow globe of Oxford, UK.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "biome lint src",
+    "format": "biome format --write src",
+    "check": "biome check --write src",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.0",
+    "@types/three": "^0.184.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  },
+  "dependencies": {
+    "three": "^0.184.0"
+  }
+}

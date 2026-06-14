@@ -1,0 +1,155 @@
+:root {
+  --hud-fg: #f4f7ff;
+  --hud-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  --btn-bg: rgba(18, 26, 54, 0.62);
+  --btn-bg-hover: rgba(34, 48, 92, 0.82);
+  --btn-border: rgba(180, 205, 255, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #070a18;
+  color: var(--hud-fg);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* ---- HUD ---- */
+.hud {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  text-shadow: var(--hud-shadow);
+  transition: opacity 0.6s ease;
+}
+
+.hud--top {
+  top: max(1.4rem, env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.hud--top h1 {
+  margin: 0;
+  font-size: clamp(1.1rem, 3.4vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.hud--bottom {
+  bottom: max(1.4rem, env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  padding: 0 0.8rem;
+}
+
+.hud--hint {
+  bottom: max(5.2rem, calc(env(safe-area-inset-bottom) + 4rem));
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  opacity: 0.7;
+  margin: 0;
+}
+
+.btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.05rem;
+  font-size: 0.95rem;
+  color: var(--hud-fg);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
+  user-select: none;
+}
+
+.btn:hover {
+  background: var(--btn-bg-hover);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn__icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+/* ---- Loading ---- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 40%, #16203f 0%, #070a18 70%);
+  transition: opacity 0.8s ease;
+}
+
+.overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-inner {
+  text-align: center;
+  color: #cdd9ff;
+}
+
+.loading-inner p {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+}
+
+.snowflake {
+  font-size: 2.6rem;
+  animation: spin 3.4s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snowflake {
+    animation: none;
+  }
+}
