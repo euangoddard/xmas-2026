@@ -26,7 +26,7 @@ const PRESETS: Record<ViewName, Preset> = {
 
 export interface CameraModes {
   toggle: () => string;
-  goTo: (name: ViewName) => void;
+  goTo: (name: ViewName, onComplete?: () => void) => void;
   snapTo: (name: ViewName) => void;
   nextLabel: () => string;
   readonly current: ViewName;
@@ -36,7 +36,7 @@ export function createCameraModes(
   camera: THREE.PerspectiveCamera,
   controls: OrbitControls,
 ): CameraModes {
-  let current: ViewName = "street";
+  let current: ViewName = "aerial";
   let cancel: (() => void) | null = null;
 
   const azimuth = (): number =>
@@ -68,7 +68,7 @@ export function createCameraModes(
     controls.update();
   }
 
-  function goTo(name: ViewName): void {
+  function goTo(name: ViewName, onComplete?: () => void): void {
     cancel?.();
     current = name;
     const fromPos = camera.position.clone();
@@ -91,6 +91,7 @@ export function createCameraModes(
       onComplete: () => {
         controls.autoRotate = wasAuto;
         cancel = null;
+        onComplete?.();
       },
     });
   }
@@ -101,8 +102,7 @@ export function createCameraModes(
   }
 
   // Label to show on the button for the next action.
-  const nextLabel = (): string =>
-    PRESETS[current === "street" ? "aerial" : "street"].next;
+  const nextLabel = (): string => PRESETS[current].next;
 
   return {
     toggle,

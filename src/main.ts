@@ -69,10 +69,11 @@ function revealUI(): void {
     el.hidden = false;
   }
   // A welcoming first impression: start pulled back, then drift inside.
-  cameraModes.goTo("aerial");
+  cameraModes.snapTo("aerial");
   window.setTimeout(() => {
-    cameraModes.goTo("street");
-    viewLabel.textContent = cameraModes.nextLabel();
+    cameraModes.goTo("street", () => {
+      viewLabel.textContent = cameraModes.nextLabel();
+    });
   }, 2600);
   // Auto-hide the drag hint after a while.
   window.setTimeout(() => {
