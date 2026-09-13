@@ -14,6 +14,10 @@ export const PALETTE = {
   doorRed: 0x6a2330,
   windowGlow: 0xffd591,
   tree: 0x1f5c3a,
+  timber: 0x5a3a22,
+  canvasRed: 0x9c2f35,
+  coal: 0x1a1a1f,
+  carrot: 0xd8722c,
 } as const;
 
 const cache = new Map<string, THREE.MeshStandardMaterial>();
@@ -51,9 +55,14 @@ export const MAT = {
   doorGreen: () => std(PALETTE.doorGreen, { roughness: 0.6 }),
   doorRed: () => std(PALETTE.doorRed, { roughness: 0.6 }),
   tree: () => std(PALETTE.tree, { roughness: 0.9 }),
+  timber: () => std(PALETTE.timber, { roughness: 0.9 }),
+  canvasRed: () => std(PALETTE.canvasRed, { roughness: 0.8 }),
+  coal: () => std(PALETTE.coal, { roughness: 0.5 }),
+  carrot: () => std(PALETTE.carrot, { roughness: 0.7 }),
+  // Cached like the rest: a fresh material per window meant hundreds of
+  // one-off materials in a city this size, all of them identical.
   window: () =>
-    new THREE.MeshStandardMaterial({
-      color: PALETTE.windowGlow,
+    std(PALETTE.windowGlow, {
       emissive: new THREE.Color(PALETTE.windowGlow),
       emissiveIntensity: 0.9,
       roughness: 0.4,

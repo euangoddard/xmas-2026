@@ -36,8 +36,9 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
     0.1,
     400,
   );
-  // Start at street level inside the globe, looking across the city.
-  camera.position.set(1.2, 2.2, GLOBE_RADIUS * 0.76);
+  // Start inside the globe at the mouth of the avenue, so the first thing the
+  // viewer looks along is the open street down to the Radcliffe Camera.
+  camera.position.set(0, 5.2, GLOBE_RADIUS * 0.93);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 2.4, -0.5);

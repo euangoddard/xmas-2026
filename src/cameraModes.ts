@@ -6,7 +6,8 @@ import { lerp, tween } from "./util/tween";
 export type ViewName = "street" | "aerial";
 
 interface Preset {
-  dist: number;
+  /** How far out the camera orbits, measured on the ground plane. */
+  radius: number;
   y: number;
   targetY: number;
   next: string;
@@ -14,10 +15,20 @@ interface Preset {
 
 // Two framings the viewer toggles between: down at street level inside the
 // globe, and pulled back to see the whole globe on its base.
+//
+// The inside view orbits in the lane the layout leaves between the backs of
+// the high street and the glass, with the eye just over the shop roofs: down
+// at pavement level the terrace is now dense enough that most bearings look
+// straight into a wall, and from here the rooflines layer back to the spires
+// and the Camera's dome instead.
+//
+// Radius is deliberately the horizontal one. Given as a straight-line distance
+// it shrinks as the eye is raised, which quietly walks the orbit back inside
+// the terrace it is supposed to clear.
 const PRESETS: Record<ViewName, Preset> = {
-  street: { dist: 8.5, y: 2.2, targetY: 2.4, next: "Zoom out" },
+  street: { radius: 9.3, y: 5.2, targetY: 2.4, next: "Zoom out" },
   aerial: {
-    dist: GLOBE_RADIUS * 2.7,
+    radius: GLOBE_RADIUS * 2.6,
     y: GLOBE_CENTER_Y + 7,
     targetY: GLOBE_CENTER_Y,
     next: "Go inside",
@@ -51,11 +62,12 @@ export function createCameraModes(
   } {
     const p = PRESETS[name];
     const az = azimuth();
-    const horiz = Math.sqrt(
-      Math.max(0.25, p.dist * p.dist - (p.y - p.targetY) ** 2),
-    );
     return {
-      pos: new THREE.Vector3(Math.sin(az) * horiz, p.y, Math.cos(az) * horiz),
+      pos: new THREE.Vector3(
+        Math.sin(az) * p.radius,
+        p.y,
+        Math.cos(az) * p.radius,
+      ),
       target: new THREE.Vector3(0, p.targetY, 0),
     };
   }

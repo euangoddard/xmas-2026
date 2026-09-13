@@ -5,6 +5,7 @@ import {
   GLOBE_CENTER_Y,
   GLOBE_RADIUS,
   GROUND_RADIUS,
+  groundHeightAt,
 } from "./constants";
 
 export interface Globe {
@@ -21,15 +22,11 @@ export function createGlobe(scene: THREE.Scene): Globe {
   // ---- Snowy ground -------------------------------------------------------
   const groundGeo = new THREE.CircleGeometry(GROUND_RADIUS, 96);
   groundGeo.rotateX(-Math.PI / 2);
-  // Gentle undulation so the snow isn't a perfect flat plane.
+  // Gentle undulation so the snow isn't a perfect flat plane. The city reads
+  // the same profile, so everything stands on the snow rather than in it.
   const pos = groundGeo.attributes.position as THREE.BufferAttribute;
   for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const z = pos.getZ(i);
-    const r = Math.hypot(x, z);
-    const bump = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.18;
-    const dome = (1 - (r / GROUND_RADIUS) ** 2) * 0.5; // slightly raised centre
-    pos.setY(i, bump + dome);
+    pos.setY(i, groundHeightAt(pos.getX(i), pos.getZ(i)));
   }
   groundGeo.computeVertexNormals();
   const ground = new THREE.Mesh(

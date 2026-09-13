@@ -1,5 +1,12 @@
 import * as THREE from "three";
 import { quality } from "../util/device";
+import {
+  COTTAGE_DEPTH_RATIO,
+  COTTAGE_ROOF_RATIO,
+  HOUSE_DEPTH_RATIO,
+  HOUSE_ROOF_RATIO,
+  SHOP_DEPTH_RATIO,
+} from "./layout";
 import { MAT } from "./materials";
 
 // A light whose emissive intensity the render loop animates (tree bulbs, lamps).
@@ -12,6 +19,10 @@ export interface Twinkler {
 
 // All builders return a THREE.Group whose origin sits on the ground (y = 0),
 // facing +Z (the "front"). The city orients each one to face the centre.
+//
+// Builders that vary their walls or paintwork take the `variant` roll the
+// layout made for that plot, so a given building looks the same on every
+// visit rather than redecorating itself on each load.
 
 const box = (
   w: number,
@@ -80,9 +91,10 @@ function addWindows(parent: THREE.Object3D, opts: WindowOpts): void {
 export function makeShop(
   width: number,
   signTexture: THREE.Texture,
+  variant: number,
 ): THREE.Group {
   const g = new THREE.Group();
-  const depth = width * 0.82;
+  const depth = width * SHOP_DEPTH_RATIO;
   const groundH = 1.5;
   const upperH = 1.7;
 
@@ -99,7 +111,7 @@ export function makeShop(
     width * 0.22,
     1.1,
     0.08,
-    Math.random() > 0.5 ? MAT.doorGreen() : MAT.doorRed(),
+    variant > 0.5 ? MAT.doorGreen() : MAT.doorRed(),
   );
   door.position.set(width * 0.28, 0.55, depth / 2 + 0.02);
   g.add(door);
@@ -146,15 +158,19 @@ export function makeShop(
   return g;
 }
 
-export function makeTownhouse(width: number, height: number): THREE.Group {
+export function makeTownhouse(
+  width: number,
+  height: number,
+  variant: number,
+): THREE.Group {
   const g = new THREE.Group();
-  const depth = width * 0.85;
+  const depth = width * HOUSE_DEPTH_RATIO;
   const body = shadowed(
     box(
       width,
       height,
       depth,
-      Math.random() > 0.5 ? MAT.stoneLight() : MAT.stoneWarm(),
+      variant > 0.5 ? MAT.stoneLight() : MAT.stoneWarm(),
     ),
   );
   body.position.y = height / 2;
@@ -169,10 +185,238 @@ export function makeTownhouse(width: number, height: number): THREE.Group {
   const door = box(width * 0.26, 1.0, 0.08, MAT.doorGreen());
   door.position.set(0, 0.5, depth / 2 + 0.02);
   g.add(door);
-  const roof = gableRoof(width * 1.05, depth * 1.05, width * 0.55);
+  const roof = gableRoof(width * 1.05, depth * 1.05, width * HOUSE_ROOF_RATIO);
   roof.position.y = height;
   g.add(roof);
   return g;
+}
+
+// A squat cottage: one low storey under a steep snowy roof, with a dormer and
+// a smoking chimney. The small, cheap building that fills the back lanes.
+export function makeCottage(
+  width: number,
+  height: number,
+  variant: number,
+): THREE.Group {
+  const g = new THREE.Group();
+  const depth = width * COTTAGE_DEPTH_RATIO;
+  const body = shadowed(
+    box(
+      width,
+      height,
+      depth,
+      variant > 0.5 ? MAT.stoneWarm() : MAT.stoneGrey(),
+    ),
+  );
+  body.position.y = height / 2;
+  g.add(body);
+
+  // One lit window either side of the door.
+  for (const sx of [-1, 1] as const) {
+    const win = box(width * 0.22, 0.45, 0.06, MAT.window());
+    win.position.set(sx * width * 0.28, height * 0.55, depth / 2 + 0.01);
+    g.add(win);
+  }
+  const door = box(width * 0.2, height * 0.62, 0.08, MAT.doorRed());
+  door.position.set(0, height * 0.31, depth / 2 + 0.02);
+  g.add(door);
+
+  const roofH = width * COTTAGE_ROOF_RATIO;
+  const roof = gableRoof(width * 1.08, depth * 1.08, roofH);
+  roof.position.y = height;
+  g.add(roof);
+
+  // Dormer poking out of the roof, its window lit.
+  const dormer = box(width * 0.3, roofH * 0.45, depth * 0.5, MAT.snow());
+  dormer.position.set(0, height + roofH * 0.3, depth * 0.22);
+  g.add(dormer);
+  const dormerWin = box(width * 0.17, roofH * 0.24, 0.06, MAT.window());
+  dormerWin.position.set(0, height + roofH * 0.3, depth * 0.47);
+  g.add(dormerWin);
+
+  // Chimney, capped with snow.
+  const chimney = box(width * 0.16, roofH * 0.9, width * 0.16, MAT.roofSlate());
+  chimney.position.set(-width * 0.3, height + roofH * 0.55, -depth * 0.2);
+  g.add(chimney);
+  const cap = box(width * 0.2, 0.1, width * 0.2, MAT.snow());
+  cap.position.set(
+    chimney.position.x,
+    height + roofH * 1.0 + 0.05,
+    chimney.position.z,
+  );
+  g.add(cap);
+  return g;
+}
+
+// A Christmas-market stall: striped canopy, a counter and a warm bulb.
+export function makeMarketStall(width: number): {
+  group: THREE.Group;
+  light: Twinkler;
+} {
+  const g = new THREE.Group();
+  const depth = width * 0.84;
+  const counterH = 0.85;
+
+  const counter = shadowed(box(width, counterH, depth, MAT.timber()));
+  counter.position.y = counterH / 2;
+  g.add(counter);
+  const top = box(width * 1.08, 0.08, depth * 1.12, MAT.stoneLight());
+  top.position.y = counterH + 0.04;
+  g.add(top);
+
+  // Corner posts holding the canopy up.
+  for (const sx of [-1, 1] as const) {
+    for (const sz of [-1, 1] as const) {
+      const post = box(0.07, 1.55, 0.07, MAT.timber());
+      post.position.set(sx * width * 0.45, 0.78, sz * depth * 0.45);
+      g.add(post);
+    }
+  }
+
+  // Canopy in alternating stripes — cheaper and crisper than a texture.
+  const stripes = 5;
+  for (let i = 0; i < stripes; i++) {
+    const stripe = box(
+      (width * 1.15) / stripes,
+      0.07,
+      depth * 1.3,
+      i % 2 === 0 ? MAT.canvasRed() : MAT.snow(),
+    );
+    stripe.position.set(
+      (-(stripes - 1) / 2 + i) * ((width * 1.15) / stripes),
+      1.6,
+      0,
+    );
+    stripe.rotation.x = -0.18;
+    g.add(stripe);
+  }
+
+  // Crates of wares on the counter.
+  for (const sx of [-0.26, 0.24] as const) {
+    const crate = box(width * 0.26, 0.2, depth * 0.4, MAT.timber());
+    crate.position.set(sx * width, counterH + 0.18, 0);
+    g.add(crate);
+  }
+
+  const bulbMat = new THREE.MeshStandardMaterial({
+    color: 0xffd9a0,
+    emissive: new THREE.Color(0xffd9a0),
+    emissiveIntensity: 1.5,
+  });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), bulbMat);
+  bulb.position.set(0, 1.45, depth * 0.4);
+  g.add(bulb);
+
+  return {
+    group: g,
+    light: {
+      mat: bulbMat,
+      phase: Math.random() * Math.PI * 2,
+      base: 1.5,
+      flicker: 0.2,
+    },
+  };
+}
+
+// A snowman, for the squares and the corners of the greens.
+export function makeSnowman(): THREE.Group {
+  const g = new THREE.Group();
+  const snow = MAT.snow();
+  for (const [y, r] of [
+    [0.36, 0.36],
+    [0.82, 0.27],
+    [1.16, 0.19],
+  ] as const) {
+    const ball = shadowed(
+      new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), snow),
+    );
+    ball.position.y = y;
+    g.add(ball);
+  }
+  const hat = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.13, 0.13, 0.18, 10),
+    MAT.coal(),
+  );
+  hat.position.y = 1.36;
+  g.add(hat);
+  const brim = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.22, 0.03, 10),
+    MAT.coal(),
+  );
+  brim.position.y = 1.28;
+  g.add(brim);
+  const nose = new THREE.Mesh(
+    new THREE.ConeGeometry(0.05, 0.22, 6),
+    MAT.carrot(),
+  );
+  nose.position.set(0, 1.16, 0.18);
+  nose.rotation.x = Math.PI / 2;
+  g.add(nose);
+  const scarf = new THREE.Mesh(
+    new THREE.TorusGeometry(0.2, 0.05, 6, 12),
+    MAT.canvasRed(),
+  );
+  scarf.rotation.x = Math.PI / 2;
+  scarf.position.y = 1.0;
+  g.add(scarf);
+  return g;
+}
+
+// A snow-laden fir. Kept slim: a fir as wide as a cottage never finds a gap in
+// a packed street, and the layout sizes its footprint to match.
+export function makeFir(height: number): THREE.Group {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.11, 0.5, 6),
+    MAT.timber(),
+  );
+  trunk.position.y = 0.25;
+  g.add(trunk);
+  for (let i = 0; i < 3; i++) {
+    const t = i / 3;
+    const r = (1 - t) * 0.42 + 0.16;
+    const tierH = height / 3 + 0.4;
+    const cone = shadowed(
+      new THREE.Mesh(new THREE.ConeGeometry(r, tierH, 7), MAT.tree()),
+    );
+    cone.position.y = 0.5 + i * (height / 3.4) + 0.3;
+    g.add(cone);
+    const snow = new THREE.Mesh(
+      new THREE.ConeGeometry(r * 1.02, tierH * 0.3, 7),
+      MAT.snow(),
+    );
+    snow.position.y = cone.position.y + tierH * 0.32;
+    g.add(snow);
+  }
+  return g;
+}
+
+// A street lamp with a warm bulb the render loop makes flicker.
+export function makeStreetLamp(): { group: THREE.Group; light: Twinkler } {
+  const g = new THREE.Group();
+  const post = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.08, 1.8, 8),
+    MAT.roofSlate(),
+  );
+  post.position.y = 0.9;
+  g.add(post);
+  const lampMat = new THREE.MeshStandardMaterial({
+    color: 0xffdf9e,
+    emissive: new THREE.Color(0xffdf9e),
+    emissiveIntensity: 1.6,
+  });
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 10), lampMat);
+  lamp.position.y = 1.85;
+  g.add(lamp);
+  return {
+    group: g,
+    light: {
+      mat: lampMat,
+      phase: Math.random() * Math.PI * 2,
+      base: 1.6,
+      flicker: 0.15,
+    },
+  };
 }
 
 // Square stone tower with crenellations + corner pinnacles (Carfax / college).
